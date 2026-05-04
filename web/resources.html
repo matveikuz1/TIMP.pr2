@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ИБ — Ресурсы (БД)</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<nav>
+    <a class="brand" href="index.html">🔒 ИБ-Система</a>
+    <ul>
+        <li><a href="index.html">Дашборд</a></li>
+        <li><a href="incidents.html">Инциденты</a></li>
+        <li><a href="resources.html" class="active">Ресурсы</a></li>
+        <li><a href="users.html">Пользователи</a></li>
+    </ul>
+</nav>
+<div class="container">
+    <div class="page-header">
+        <h1>Реестр ресурсов (баз данных)</h1>
+        <a href="resources_add.html" class="btn btn-primary">+ Добавить БД</a>
+    </div>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr><th>#</th><th>Название БД</th><th>Тип СУБД</th><th>Критичность</th><th>Объём (ГБ)</th><th>Ответственный администратор</th><th>Действия</th></tr>
+            </thead>
+            <tbody id="resources-body">
+                <tr><td colspan="7" style="text-align:center;color:#999;">Загрузка...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+<footer>© 2026 Система управления информационной безопасностью предприятия</footer>
+<script>
+const DB_TYPE_LABELS = { postgresql: 'PostgreSQL', mysql: 'MySQL', oracle: 'Oracle', mongodb: 'MongoDB' };
+const SEVERITY_LABELS = { high: 'Высокая', medium: 'Средняя', low: 'Низкая' };
+function severityBadge(s) { return `<span class="badge badge-${s}">${SEVERITY_LABELS[s]||s}</span>`; }
+
+async function loadResources() {
+    const resources = await fetch('/api/resources').then(r => r.json());
+    const tbody = document.getElementById('resources-body');
+    tbody.innerHTML = resources.length === 0
+        ? '<tr><td colspan="7" style="text-align:center;color:#999;">Нет ресурсов</td></tr>'
+        : resources.map((r, i) => `<tr>
+            <td>${i+1}</td>
+            <td>${r.name}</td>
+            <td>${DB_TYPE_LABELS[r.db_type]||r.db_type}</td>
+            <td>${severityBadge(r.severity)}</td>
+            <td>${r.volume}</td>
+            <td>${r.admin}</td>
+            <td>
+                <a href="resources_edit.html?id=${r.id}" class="btn btn-warning btn-sm">Редактировать</a>
+                <button class="btn btn-danger btn-sm" onclick="deleteResource(${r.id})">Удалить</button>
+            </td>
+        </tr>`).join('');
+}
+
+async function deleteResource(id) {
+    if (!confirm('Вы уверены, что хотите удалить этот ресурс?')) return;
+    const res = await fetch('/api/resources/' + id, { method: 'DELETE' });
+    if (res.ok) loadResources();
+    else alert('Ошибка при удалении.');
+}
+
+loadResources();
+</script>
+</body>
+</html>

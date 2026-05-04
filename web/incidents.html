@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ИБ — Инциденты</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<nav>
+    <a class="brand" href="index.html">🔒 ИБ-Система</a>
+    <ul>
+        <li><a href="index.html">Дашборд</a></li>
+        <li><a href="incidents.html" class="active">Инциденты</a></li>
+        <li><a href="resources.html">Ресурсы</a></li>
+        <li><a href="users.html">Пользователи</a></li>
+    </ul>
+</nav>
+<div class="container">
+    <div class="page-header">
+        <h1>Реестр инцидентов</h1>
+        <a href="incidents_add.html" class="btn btn-primary">+ Создать инцидент</a>
+    </div>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr><th>#</th><th>Дата</th><th>Тип атаки</th><th>Критичность</th><th>Статус</th><th>Ответственный</th><th>Действия</th></tr>
+            </thead>
+            <tbody id="incidents-body">
+                <tr><td colspan="7" style="text-align:center;color:#999;">Загрузка...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+<footer>© 2026 Система управления информационной безопасностью предприятия</footer>
+<script>
+const ATTACK_LABELS = {
+    phishing: 'Фишинг', malware: 'Вредоносное ПО', 'data-leak': 'Утечка данных',
+    dos: 'Отказ в обслуживании', 'account-breach': 'Взлом учётной записи'
+};
+const SEVERITY_LABELS = { high: 'Высокая', medium: 'Средняя', low: 'Низкая' };
+const STATUS_LABELS = { open: 'Открыт', 'in-work': 'В работе', closed: 'Закрыт' };
+
+function severityBadge(s) { return `<span class="badge badge-${s}">${SEVERITY_LABELS[s]||s}</span>`; }
+function statusBadge(s) { return `<span class="badge badge-${s==='in-work'?'in-work':s}">${STATUS_LABELS[s]||s}</span>`; }
+
+async function loadIncidents() {
+    const incidents = await fetch('/api/incidents').then(r => r.json());
+    const tbody = document.getElementById('incidents-body');
+    tbody.innerHTML = incidents.length === 0
+        ? '<tr><td colspan="7" style="text-align:center;color:#999;">Нет инцидентов</td></tr>'
+        : incidents.map((inc, i) => `<tr>
+            <td>${i+1}</td>
+            <td>${inc.date}</td>
+            <td>${ATTACK_LABELS[inc.attack_type]||inc.attack_type}</td>
+            <td>${severityBadge(inc.severity)}</td>
+            <td>${statusBadge(inc.status)}</td>
+            <td>${inc.responsible}</td>
+            <td>
+                <a href="incidents_edit.html?id=${inc.id}" class="btn btn-warning btn-sm">Редактировать</a>
+                <button class="btn btn-danger btn-sm" onclick="deleteIncident(${inc.id})">Удалить</button>
+            </td>
+        </tr>`).join('');
+}
+
+async function deleteIncident(id) {
+    if (!confirm('Вы уверены, что хотите удалить этот инцидент?')) return;
+    const res = await fetch('/api/incidents/' + id, { method: 'DELETE' });
+    if (res.ok) loadIncidents();
+    else alert('Ошибка при удалении.');
+}
+
+loadIncidents();
+</script>
+</body>
+</html>

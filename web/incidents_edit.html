@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ИБ — Редактирование инцидента</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<nav>
+    <a class="brand" href="index.html">🔒 ИБ-Система</a>
+    <ul>
+        <li><a href="index.html">Дашборд</a></li>
+        <li><a href="incidents.html" class="active">Инциденты</a></li>
+        <li><a href="resources.html">Ресурсы</a></li>
+        <li><a href="users.html">Пользователи</a></li>
+    </ul>
+</nav>
+<div class="container">
+    <div class="page-header"><h1 id="page-title">Редактирование инцидента</h1></div>
+    <div class="form-card">
+        <form id="incident-form">
+            <div class="form-group">
+                <label for="incident-date">Дата инцидента</label>
+                <input type="date" id="incident-date" name="date" required>
+            </div>
+            <div class="form-group">
+                <label for="attack-type">Тип атаки</label>
+                <select id="attack-type" name="attack_type" required>
+                    <option value="phishing">Фишинг</option>
+                    <option value="malware">Вредоносное ПО</option>
+                    <option value="data-leak">Утечка данных</option>
+                    <option value="dos">Отказ в обслуживании</option>
+                    <option value="account-breach">Взлом учётной записи</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="severity">Критичность</label>
+                <select id="severity" name="severity" required>
+                    <option value="high">Высокая</option>
+                    <option value="medium">Средняя</option>
+                    <option value="low">Низкая</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="status">Статус</label>
+                <select id="status" name="status" required>
+                    <option value="open">Открыт</option>
+                    <option value="in-work">В работе</option>
+                    <option value="closed">Закрыт</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="description">Описание происшествия</label>
+                <textarea id="description" name="description" rows="4"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="responsible">Ответственный сотрудник</label>
+                <input type="text" id="responsible" name="responsible" required>
+            </div>
+            <div id="form-error" style="color:#c92a2a;margin-bottom:10px;display:none;"></div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-success">💾 Сохранить изменения</button>
+                <button type="button" class="btn btn-danger" id="btn-delete">🗑 Удалить</button>
+                <a href="incidents.html" class="btn btn-secondary">✕ Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>
+<footer>© 2026 Система управления информационной безопасностью предприятия</footer>
+<script>
+const id = new URLSearchParams(location.search).get('id');
+if (!id) { alert('ID не указан.'); location.href = 'incidents.html'; }
+
+async function loadIncident() {
+    const res = await fetch('/api/incidents/' + id);
+    if (!res.ok) { alert('Инцидент не найден.'); location.href = 'incidents.html'; return; }
+    const inc = await res.json();
+    document.getElementById('page-title').textContent = 'Редактирование инцидента #' + inc.id;
+    document.getElementById('incident-date').value = inc.date || '';
+    document.getElementById('attack-type').value = inc.attack_type || '';
+    document.getElementById('severity').value = inc.severity || '';
+    document.getElementById('status').value = inc.status || '';
+    document.getElementById('description').value = inc.description || '';
+    document.getElementById('responsible').value = inc.responsible || '';
+}
+
+document.getElementById('incident-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(this));
+    const res = await fetch('/api/incidents/' + id, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+    if (res.ok) {
+        window.location.href = 'incidents.html';
+    } else {
+        const err = document.getElementById('form-error');
+        err.textContent = 'Ошибка при сохранении.';
+        err.style.display = 'block';
+    }
+});
+
+document.getElementById('btn-delete').addEventListener('click', async function() {
+    if (!confirm('Вы уверены, что хотите удалить этот инцидент?')) return;
+    const res = await fetch('/api/incidents/' + id, { method: 'DELETE' });
+    if (res.ok) location.href = 'incidents.html';
+    else alert('Ошибка при удалении.');
+});
+
+loadIncident();
+</script>
+</body>
+</html>

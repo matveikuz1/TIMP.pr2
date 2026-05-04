@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ИБ — Дашборд</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav>
+    <a class="brand" href="index.html">🔒 ИБ-Система</a>
+    <ul>
+        <li><a href="index.html" class="active">Дашборд</a></li>
+        <li><a href="incidents.html">Инциденты</a></li>
+        <li><a href="resources.html">Ресурсы</a></li>
+        <li><a href="users.html">Пользователи</a></li>
+    </ul>
+</nav>
+
+<div class="container">
+    <div class="page-header">
+        <h1>Дашборд — Обзор системы</h1>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card red">
+            <div class="value" id="stat-open">—</div>
+            <div class="label">Открытых инцидентов</div>
+        </div>
+        <div class="stat-card orange">
+            <div class="value" id="stat-inwork">—</div>
+            <div class="label">В работе</div>
+        </div>
+        <div class="stat-card green">
+            <div class="value" id="stat-closed">—</div>
+            <div class="label">Закрытых инцидентов</div>
+        </div>
+        <div class="stat-card blue">
+            <div class="value" id="stat-total">—</div>
+            <div class="label">Всего инцидентов</div>
+        </div>
+        <div class="stat-card purple">
+            <div class="value" id="stat-resources">—</div>
+            <div class="label">Контролируемых БД</div>
+        </div>
+        <div class="stat-card">
+            <div class="value" id="stat-users">—</div>
+            <div class="label">Пользователей</div>
+        </div>
+    </div>
+
+    <div class="dashboard-section">
+        <h2>5 последних инцидентов</h2>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Дата</th>
+                        <th>Тип атаки</th>
+                        <th>Критичность</th>
+                        <th>Статус</th>
+                        <th>Ответственный</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="recent-incidents-body">
+                    <tr><td colspan="6" style="text-align:center;color:#999;">Загрузка...</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div style="margin-top:14px;">
+            <a href="incidents.html" class="btn btn-secondary btn-sm">Все инциденты →</a>
+        </div>
+    </div>
+
+    <div class="dashboard-section">
+        <h2>Быстрый доступ</h2>
+        <div class="quick-links">
+            <a href="incidents.html" class="quick-link"><span class="icon">⚠️</span>Инциденты</a>
+            <a href="incidents_add.html" class="quick-link"><span class="icon">➕</span>Создать инцидент</a>
+            <a href="resources.html" class="quick-link"><span class="icon">🗄️</span>Ресурсы (БД)</a>
+            <a href="resources_add.html" class="quick-link"><span class="icon">➕</span>Добавить БД</a>
+            <a href="users.html" class="quick-link"><span class="icon">👥</span>Пользователи</a>
+            <a href="users_add.html" class="quick-link"><span class="icon">➕</span>Добавить пользователя</a>
+        </div>
+    </div>
+</div>
+
+<footer>© 2026 Система управления информационной безопасностью предприятия</footer>
+
+<script>
+const ATTACK_LABELS = {
+    phishing: 'Фишинг', malware: 'Вредоносное ПО', 'data-leak': 'Утечка данных',
+    dos: 'Отказ в обслуживании', 'account-breach': 'Взлом учётной записи'
+};
+const SEVERITY_LABELS = { high: 'Высокая', medium: 'Средняя', low: 'Низкая' };
+const STATUS_LABELS = { open: 'Открыт', 'in-work': 'В работе', closed: 'Закрыт' };
+
+function severityBadge(s) { return `<span class="badge badge-${s}">${SEVERITY_LABELS[s]||s}</span>`; }
+function statusBadge(s) { return `<span class="badge badge-${s==='in-work'?'in-work':s}">${STATUS_LABELS[s]||s}</span>`; }
+
+async function loadDashboard() {
+    const [incidents, resources, users] = await Promise.all([
+        fetch('/api/incidents').then(r => r.json()),
+        fetch('/api/resources').then(r => r.json()),
+        fetch('/api/users').then(r => r.json())
+    ]);
+    document.getElementById('stat-open').textContent    = incidents.filter(i => i.status === 'open').length;
+    document.getElementById('stat-inwork').textContent  = incidents.filter(i => i.status === 'in-work').length;
+    document.getElementById('stat-closed').textContent  = incidents.filter(i => i.status === 'closed').length;
+    document.getElementById('stat-total').textContent   = incidents.length;
+    document.getElementById('stat-resources').textContent = resources.length;
+    document.getElementById('stat-users').textContent   = users.length;
+
+    const recent = [...incidents].reverse().slice(0, 5);
+    const tbody = document.getElementById('recent-incidents-body');
+    tbody.innerHTML = recent.length === 0
+        ? '<tr><td colspan="6" style="text-align:center;color:#999;">Нет данных</td></tr>'
+        : recent.map(inc => `<tr>
+            <td>${inc.date}</td>
+            <td>${ATTACK_LABELS[inc.attack_type]||inc.attack_type}</td>
+            <td>${severityBadge(inc.severity)}</td>
+            <td>${statusBadge(inc.status)}</td>
+            <td>${inc.responsible}</td>
+            <td><a href="incidents_edit.html?id=${inc.id}" class="btn btn-warning btn-sm">Редактировать</a></td>
+        </tr>`).join('');
+}
+loadDashboard();
+</script>
+</body>
+</html>

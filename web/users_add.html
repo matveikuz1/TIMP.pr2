@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ИБ — Добавление пользователя</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<nav>
+    <a class="brand" href="index.html">🔒 ИБ-Система</a>
+    <ul>
+        <li><a href="index.html">Дашборд</a></li>
+        <li><a href="incidents.html">Инциденты</a></li>
+        <li><a href="resources.html">Ресурсы</a></li>
+        <li><a href="users.html" class="active">Пользователи</a></li>
+    </ul>
+</nav>
+<div class="container">
+    <div class="page-header"><h1>Добавление пользователя</h1></div>
+    <div class="form-card">
+        <form id="user-form">
+            <div class="form-group">
+                <label for="full-name">ФИО</label>
+                <input type="text" id="full-name" name="full_name" placeholder="Фамилия Имя Отчество" required>
+            </div>
+            <div class="form-group">
+                <label for="position">Должность</label>
+                <input type="text" id="position" name="position" placeholder="Например: Специалист ИБ" required>
+            </div>
+            <div class="form-group">
+                <label for="department">Отдел</label>
+                <input type="text" id="department" name="department" placeholder="Например: Отдел ИБ" required>
+            </div>
+            <div class="form-group">
+                <label for="access-level">Уровень доступа</label>
+                <select id="access-level" name="access_level" required>
+                    <option value="" disabled selected>— Выберите уровень —</option>
+                    <option value="admin">Администратор</option>
+                    <option value="user">Пользователь</option>
+                    <option value="guest">Гость</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="login">Логин</label>
+                <input type="text" id="login" name="login" placeholder="Латинские символы, без пробелов" required>
+            </div>
+            <div class="form-group">
+                <label for="temp-password">Временный пароль</label>
+                <input type="password" id="temp-password" name="password" placeholder="Не менее 8 символов" minlength="8" required>
+            </div>
+            <div id="form-error" style="color:#c92a2a;margin-bottom:10px;display:none;"></div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-success">💾 Сохранить</button>
+                <a href="users.html" class="btn btn-secondary">✕ Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>
+<footer>© 2026 Система управления информационной безопасностью предприятия</footer>
+<script>
+document.getElementById('user-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(this));
+    data.password_changed = new Date().toISOString().slice(0, 10);
+    const res = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+    if (res.ok) {
+        window.location.href = 'users.html';
+    } else {
+        const err = document.getElementById('form-error');
+        err.textContent = 'Ошибка при сохранении. Попробуйте снова.';
+        err.style.display = 'block';
+    }
+});
+</script>
+</body>
+</html>

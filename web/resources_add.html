@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ИБ — Добавление ресурса</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<nav>
+    <a class="brand" href="index.html">🔒 ИБ-Система</a>
+    <ul>
+        <li><a href="index.html">Дашборд</a></li>
+        <li><a href="incidents.html">Инциденты</a></li>
+        <li><a href="resources.html" class="active">Ресурсы</a></li>
+        <li><a href="users.html">Пользователи</a></li>
+    </ul>
+</nav>
+<div class="container">
+    <div class="page-header"><h1>Добавление ресурса (БД)</h1></div>
+    <div class="form-card">
+        <form id="resource-form">
+            <div class="form-group">
+                <label for="db-name">Название БД</label>
+                <input type="text" id="db-name" name="name" placeholder="Например: Finance_DB" required>
+            </div>
+            <div class="form-group">
+                <label for="db-type">Тип СУБД</label>
+                <select id="db-type" name="db_type" required>
+                    <option value="" disabled selected>— Выберите СУБД —</option>
+                    <option value="postgresql">PostgreSQL</option>
+                    <option value="mysql">MySQL</option>
+                    <option value="oracle">Oracle</option>
+                    <option value="mongodb">MongoDB</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="severity">Уровень критичности</label>
+                <select id="severity" name="severity" required>
+                    <option value="" disabled selected>— Выберите уровень —</option>
+                    <option value="high">Высокая</option>
+                    <option value="medium">Средняя</option>
+                    <option value="low">Низкая</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="volume">Объём данных (ГБ)</label>
+                <input type="number" id="volume" name="volume" min="0" step="0.1" placeholder="0" required>
+            </div>
+            <div class="form-group">
+                <label for="admin">ФИО ответственного администратора</label>
+                <input type="text" id="admin" name="admin" placeholder="Фамилия Имя Отчество" required>
+            </div>
+            <div id="form-error" style="color:#c92a2a;margin-bottom:10px;display:none;"></div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-success">💾 Сохранить</button>
+                <a href="resources.html" class="btn btn-secondary">✕ Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>
+<footer>© 2026 Система управления информационной безопасностью предприятия</footer>
+<script>
+document.getElementById('resource-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(this));
+    data.volume = parseFloat(data.volume);
+    const res = await fetch('/api/resources', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+    if (res.ok) {
+        window.location.href = 'resources.html';
+    } else {
+        const err = document.getElementById('form-error');
+        err.textContent = 'Ошибка при сохранении. Попробуйте снова.';
+        err.style.display = 'block';
+    }
+});
+</script>
+</body>
+</html>

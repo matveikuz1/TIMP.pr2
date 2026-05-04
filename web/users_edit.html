@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ИБ — Редактирование пользователя</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<nav>
+    <a class="brand" href="index.html">🔒 ИБ-Система</a>
+    <ul>
+        <li><a href="index.html">Дашборд</a></li>
+        <li><a href="incidents.html">Инциденты</a></li>
+        <li><a href="resources.html">Ресурсы</a></li>
+        <li><a href="users.html" class="active">Пользователи</a></li>
+    </ul>
+</nav>
+<div class="container">
+    <div class="page-header"><h1>Редактирование пользователя</h1></div>
+    <div class="form-card">
+        <form id="user-form">
+            <div class="form-group">
+                <label for="full-name">ФИО</label>
+                <input type="text" id="full-name" name="full_name" required>
+            </div>
+            <div class="form-group">
+                <label for="position">Должность</label>
+                <input type="text" id="position" name="position" required>
+            </div>
+            <div class="form-group">
+                <label for="department">Отдел</label>
+                <input type="text" id="department" name="department" required>
+            </div>
+            <div class="form-group">
+                <label for="access-level">Уровень доступа</label>
+                <select id="access-level" name="access_level" required>
+                    <option value="admin">Администратор</option>
+                    <option value="user">Пользователь</option>
+                    <option value="guest">Гость</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="login">Логин</label>
+                <input type="text" id="login" name="login" required>
+            </div>
+            <div class="form-group">
+                <label for="new-password">Новый пароль (сброс)</label>
+                <input type="password" id="new-password" name="password" placeholder="Оставьте пустым, если не нужно менять" minlength="8">
+                <small style="color:#888;font-size:0.8rem;">Заполните только при необходимости смены пароля</small>
+            </div>
+            <div id="form-error" style="color:#c92a2a;margin-bottom:10px;display:none;"></div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-success">💾 Сохранить изменения</button>
+                <button type="button" class="btn btn-danger" id="btn-delete">🗑 Удалить</button>
+                <a href="users.html" class="btn btn-secondary">✕ Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>
+<footer>© 2026 Система управления информационной безопасностью предприятия</footer>
+<script>
+const id = new URLSearchParams(location.search).get('id');
+if (!id) { alert('ID не указан.'); location.href = 'users.html'; }
+
+let currentData = {};
+
+async function loadUser() {
+    const res = await fetch('/api/users/' + id);
+    if (!res.ok) { alert('Пользователь не найден.'); location.href = 'users.html'; return; }
+    const u = await res.json();
+    currentData = u;
+    document.getElementById('full-name').value = u.full_name || '';
+    document.getElementById('position').value = u.position || '';
+    document.getElementById('department').value = u.department || '';
+    document.getElementById('access-level').value = u.access_level || '';
+    document.getElementById('login').value = u.login || '';
+}
+
+document.getElementById('user-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(this));
+    if (!data.password) {
+        delete data.password;
+        data.password_changed = currentData.password_changed;
+    } else {
+        data.password_changed = new Date().toISOString().slice(0, 10);
+    }
+    const res = await fetch('/api/users/' + id, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+    if (res.ok) {
+        window.location.href = 'users.html';
+    } else {
+        const err = document.getElementById('form-error');
+        err.textContent = 'Ошибка при сохранении.';
+        err.style.display = 'block';
+    }
+});
+
+document.getElementById('btn-delete').addEventListener('click', async function() {
+    if (!confirm('Вы уверены, что хотите удалить этого пользователя?')) return;
+    const res = await fetch('/api/users/' + id, { method: 'DELETE' });
+    if (res.ok) location.href = 'users.html';
+    else alert('Ошибка при удалении.');
+});
+
+loadUser();
+</script>
+</body>
+</html>
