@@ -8,10 +8,7 @@ HOST = "127.0.0.1"
 PORT = 9090
 
 USERS = {
-    "ivanov": {"status": "active", "role": "analyst", "password_changed": "2025-03-10"},
-    "petrov": {"status": "blocked", "role": "operator", "password_changed": "2024-11-01"},
-    "sidorov": {"status": "active", "role": "admin", "password_changed": "2025-04-20"},
-    "kozlov": {"status": "active", "role": "guest", "password_changed": "2024-09-15"},
+    "ivanov": {"status": "active", "role": "analyst", "password_changed": "2025-28-06"},
 }
 
 RESOURCES = ["сервер БД", "файловый сервер", "почтовый сервер", "web-портал", "система мониторинга"]
